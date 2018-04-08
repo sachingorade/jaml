@@ -18,3 +18,11 @@ For example, following agent string specifies that JAML library should be loaded
 
 ### JMX client (jconsole)
 This method allows a JMX client like jConsole to configure the classes to be monitored by the JAML library. As of now this method is more powerful as using this method you can control the classes and methods to be monitored at runtime.
+
+## Output
+Once you have configured JAML in your application JAML library will start printing the monitoring logs on standard output stream with [JAML] prefix like an example below,
+
+```
+[JAML] Monitoring class : com.app.package.ClassName
+[JAML] Transforming class:com.app.package.ClassName
+```
