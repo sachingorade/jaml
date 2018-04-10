@@ -40,25 +40,46 @@ public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransforme
 	}
 
 	private byte[] defineClass(ClassMonitorInfo classMonitorInfo, byte[] classfileBuffer) throws Exception {
-		ClassPool classPool = ClassPool.getDefault();
-		CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
-		CtMethod methods[] = ctClass.getDeclaredMethods();
-		for (CtMethod m : methods) {
-			if (classMonitorInfo.getMethods() == null || classMonitorInfo.getMethods().contains(m.getName())) {
-				App.logMessage("Updating method:" + m.getName() + "," + m.getSignature() + "," + m.getDeclaringClass().getName());
-				String varName = "jaml_" + m.getName() + "_startTime";
-				m.addLocalVariable(varName, CtClass.longType);
-				m.insertBefore(varName + " = System.currentTimeMillis();");
-				m.insertAfter("System.out.println(\"[JAML] [" + ctClass.getName() + ":" + m.getName() + "] - Execution Duration "
-						+ "(milli sec): \"+ (System.currentTimeMillis() - " + varName + ") );");
-				m.insertAfter("System.out.print(\"[JAML][Arguments]:\");");
-				m.insertAfter("System.out.println($args.length);");
-				m.insertAfter("for(int i=0;i<$args.length;i++) {System.out.println($args[i]);}");
+		try {
+			ClassPool classPool = ClassPool.getDefault();
+			CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
+			CtMethod methods[] = ctClass.getDeclaredMethods();
+			for (CtMethod m : methods) {
+				if (classMonitorInfo.getMethods() == null || classMonitorInfo.getMethods().contains(m.getName())) {
+					App.logMessage("Updating method:" + m.getName() + "," + m.getSignature() + "," + m.getDeclaringClass().getName());
+					String startTimeVarName = "jaml_" + m.getName() + "_startTime";
+					String endTimeVarName = "jaml_" + m.getName() + "_endTime";
+					m.addLocalVariable(startTimeVarName, CtClass.longType);
+					m.addLocalVariable(endTimeVarName, CtClass.longType);
+					
+					/*
+					 * Record start time
+					 */
+					m.insertBefore(startTimeVarName + " = System.currentTimeMillis();");
+
+					StringBuilder afterCode = new StringBuilder();
+					/*
+					 * Record end time
+					 */
+					afterCode.append(endTimeVarName + " = System.currentTimeMillis();");
+					
+					String argVarName = "jaml_" + m.getName() + "_args";
+					afterCode.append("StringBuilder " + argVarName + " = new StringBuilder(\":Arguments:\");");
+					afterCode.append("for(int i=0;i<$args.length;i++) {if(i>0) {" + argVarName + ".append(\",\");}" + argVarName + ".append($args[i]);}");
+					
+					afterCode.append("System.out.println(\"[JAML] [Execution:" + ctClass.getName() + ":" + m.getName() + ":\" + "
+							+ startTimeVarName + " + \":\" + " + endTimeVarName + " + \":\" + (" + endTimeVarName + " - " + startTimeVarName + ") + " + argVarName  + " + \"]\");");
+					
+					m.insertAfter(afterCode.toString());
+				}
 			}
+			byte[] bytecode = ctClass.toBytecode();
+			ctClass.detach();
+			return bytecode;
+		} catch (Exception e) {
+			App.logMessage("Error :[" + e.getMessage() + "] while transforming class:" + classMonitorInfo.getClasssName());
+			throw e;
 		}
-		byte[] bytecode = ctClass.toBytecode();
-		ctClass.detach();
-		return bytecode;
 	}
 
 	@Override
