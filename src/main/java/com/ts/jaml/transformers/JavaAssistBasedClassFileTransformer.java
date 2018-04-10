@@ -13,7 +13,6 @@ import com.ts.jaml.pojo.ClassMonitorInfo;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.bytecode.LocalVariableAttribute;
 
 /**
  * @author saching
@@ -85,12 +84,30 @@ public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransforme
 	@Override
 	public synchronized void addClassToMonitor(String className) throws ClassNotFoundException, UnmodifiableClassException {
 		jamlRegistry.removeClassesBeingMonitored(className);
-		instrumentation.retransformClasses(Class.forName(className));
+		reloadClass(className);
 	}
 
 	@Override
 	public synchronized void removeClassFromMonitoring(String className) throws ClassNotFoundException, UnmodifiableClassException {
 		jamlRegistry.removeClassesBeingMonitored(className);
-		instrumentation.retransformClasses(Class.forName(className));
-	} 
+		reloadClass(className);
+	}
+	
+	private void reloadClass(String className) throws UnmodifiableClassException, ClassNotFoundException {
+		Class<?>[] loadedClasses = instrumentation.getAllLoadedClasses();
+		for (Class<?> loadedClass : loadedClasses) {
+			if (className.equals(loadedClass.getName())) {
+				App.logMessage("Retransforming class : " + loadedClass.getName());
+				if (instrumentation.isModifiableClass(loadedClass)) {
+					try {
+						instrumentation.retransformClasses(loadedClass);
+					} catch (Exception e) {
+						App.logMessage("Error [" + e.getMessage() + "] while retransforming class " + className +", trying to reload the class.");
+					}
+				} else {
+					instrumentation.retransformClasses(loadedClass.getClass().getClassLoader().loadClass(className));
+				}
+			}
+		}
+	}
 }

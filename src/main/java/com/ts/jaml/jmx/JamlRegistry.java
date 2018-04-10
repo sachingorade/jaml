@@ -97,10 +97,8 @@ public class JamlRegistry implements JamlRegistryMBean {
 				info = new ClassMonitorInfo(entry.getKey());
 				classesToMonitor.put(entry.getKey(), info);
 				event = new ClassMonitorAddedEvent(info);
-				App.logMessage("Monitor added for : " + info);
 			} else {
 				event = new ClassMonitorUpdatedEvent(info);
-				App.logMessage("Monitor updated for : " + info);
 			}
 			if (entry.getValue() != null && !entry.getValue().isEmpty()) {
 				if (info.getMethods() == null) {
@@ -108,6 +106,7 @@ public class JamlRegistry implements JamlRegistryMBean {
 				}
 				info.getMethods().addAll(entry.getValue());
 			}
+			App.logMessage("Monitor changed for : " + info);
 			App.publishEvent(event);
 		}
 	}
