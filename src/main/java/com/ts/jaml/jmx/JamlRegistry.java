@@ -15,6 +15,8 @@ import com.ts.jaml.events.ClassMonitorUntransformedEvent;
 import com.ts.jaml.events.ClassMonitorUpdatedEvent;
 import com.ts.jaml.events.JamlEvent;
 import com.ts.jaml.pojo.ClassMonitorInfo;
+import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
+import com.ts.jaml.pojo.MethodMonitorInfo;
 
 /**
  * @author saching
@@ -58,7 +60,7 @@ public class JamlRegistry implements JamlRegistryMBean {
 		 * and we don't want to load the class only for finding out the methods to be monitored if user has not
 		 * specified any.
 		 */
-		return info.getMethods() == null || info.getMethods().contains(methodName);
+		return info.getMethodsToMonitor() == null || info.getMethodsToMonitor().containsKey(methodName);
 	}
 	
 	/**
@@ -71,7 +73,7 @@ public class JamlRegistry implements JamlRegistryMBean {
 	
 	public synchronized boolean isMonitored(String className, String methodName) {
 		ClassMonitorInfo info = classesBeingMonitored.get(className);
-		return (info != null) && (info.getMethods() == null || info.getMethods().contains(methodName));
+		return (info != null) && (info.getMethodsToMonitor() == null || info.getMethodsToMonitor().containsKey(methodName));
 	}
 	
 	public synchronized void addClassesToMonitor(String... classNames) {
@@ -89,8 +91,8 @@ public class JamlRegistry implements JamlRegistryMBean {
 		}
 	}
 
-	public synchronized void addClassesToMonitor(Map<String, Set<String>> classes) {
-		for (Entry<String, Set<String>> entry : classes.entrySet()) {
+	public synchronized void addClassesToMonitor(Map<String, Map<String, MethodMonitorInfo>> classes) {
+		for (Entry<String, Map<String, MethodMonitorInfo>> entry : classes.entrySet()) {
 			ClassMonitorInfo info = classesToMonitor.get(entry.getKey());
 			JamlEvent event;
 			if (info == null) {
@@ -101,10 +103,10 @@ public class JamlRegistry implements JamlRegistryMBean {
 				event = new ClassMonitorUpdatedEvent(info);
 			}
 			if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-				if (info.getMethods() == null) {
-					info.setMethods(new HashSet<String>());
+				if (info.getMethodsToMonitor() == null) {
+					info.setMethods(new HashMap<String, MethodMonitorInfo>());
 				}
-				info.getMethods().addAll(entry.getValue());
+				info.getMethodsToMonitor().putAll(entry.getValue());
 			}
 			App.logMessage("Monitor changed for : " + info);
 			App.publishEvent(event);
@@ -119,8 +121,8 @@ public class JamlRegistry implements JamlRegistryMBean {
 		}
 	}
 	
-	public synchronized void addClassBeingMonitored(Map<String, Set<String>> classes) {
-		for (Entry<String, Set<String>> entry : classes.entrySet()) {
+	public synchronized void addClassBeingMonitored(Map<String, Map<String, MethodMonitorInfo>> classes) {
+		for (Entry<String, Map<String, MethodMonitorInfo>> entry : classes.entrySet()) {
 			ClassMonitorInfo info = classesBeingMonitored.get(entry.getKey());
 			JamlEvent event;
 			if (info == null) {
@@ -131,10 +133,10 @@ public class JamlRegistry implements JamlRegistryMBean {
 				event = new ClassMonitorRetransformedEvent(info);
 			}
 			if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-				if (info.getMethods() == null) {
-					info.setMethods(new HashSet<String>());
+				if (info.getMethodsToMonitor() == null) {
+					info.setMethods(new HashMap<String, MethodMonitorInfo>());
 				}
-				info.getMethods().addAll(entry.getValue());
+				info.getMethodsToMonitor().putAll(entry.getValue());
 			}
 			App.publishEvent(event);
 		}
@@ -183,9 +185,9 @@ public class JamlRegistry implements JamlRegistryMBean {
 
 	@Override
 	public synchronized void addClassMethodToMonitor(String className, String methodName) {
-		Map<String, Set<String>> classesToMonitor = new HashMap<>();
-		HashSet<String> methodsToMonitor = new HashSet<>();
-		methodsToMonitor.add(methodName);
+		Map<String, Map<String, MethodMonitorInfo>> classesToMonitor = new HashMap<>();
+		Map<String, MethodMonitorInfo> methodsToMonitor = new HashMap<>();
+		methodsToMonitor.put(methodName, new ExecutionTimeMonitorInfo());
 		classesToMonitor.put(className, methodsToMonitor);
 		addClassesToMonitor(classesToMonitor);
 	}
@@ -198,10 +200,14 @@ public class JamlRegistry implements JamlRegistryMBean {
 			return;
 		}
 		classesBeingMonitored.remove(className);
-		if (classMonitorInfo.getMethods().remove(methodName)) {
-			JamlEvent event = new ClassMonitorUpdatedEvent(classMonitorInfo);
+		MethodMonitorInfo methodMonitorInfo = classMonitorInfo.getMethodsToMonitor() == null ? null : classMonitorInfo.getMethodsToMonitor().remove(methodName);
+		if (classMonitorInfo.getMethodsToMonitor() == null || (classMonitorInfo.getMethodsToMonitor().isEmpty() && methodMonitorInfo != null)) {
+			JamlEvent event = new ClassMonitorRemovedEvent(classMonitorInfo);
 			App.publishEvent(event);
+			return;
 		}
+		JamlEvent event = new ClassMonitorUpdatedEvent(classMonitorInfo);
+		App.publishEvent(event);
 	}
 
 }

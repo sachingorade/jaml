@@ -7,13 +7,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.ts.jaml.jmx.JamlRegistry;
+import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
 import com.ts.jaml.pojo.JamlCommand;
+import com.ts.jaml.pojo.MethodMonitorInfo;
 
 /**
  * @author saching
@@ -86,12 +86,12 @@ public class JamlServer {
 		case ADDCLASS:
 			{
 				String[] options = args.get(1).split(",");
-				Map<String, Set<String>> map = new HashMap<>();
-				Set<String> methods = null;
+				Map<String, Map<String, MethodMonitorInfo>> map = new HashMap<>();
+				Map<String, MethodMonitorInfo> methods = null;
 				if(options.length > 1) {
-					methods = new HashSet<>();
+					methods = new HashMap<>();
 					for (int i=1;i<options.length;i++) {
-						methods.add(options[i]);
+						methods.put(options[i], new ExecutionTimeMonitorInfo());
 					}
 				}
 				map.put(options[0], methods);

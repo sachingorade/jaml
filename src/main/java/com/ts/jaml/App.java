@@ -7,9 +7,7 @@ import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -18,6 +16,8 @@ import com.google.common.eventbus.EventBus;
 import com.ts.jaml.events.JamlEvent;
 import com.ts.jaml.factory.TransformerFactory;
 import com.ts.jaml.jmx.JamlRegistry;
+import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
+import com.ts.jaml.pojo.MethodMonitorInfo;
 import com.ts.jaml.transformers.JamlClassFileTransformer;
 
 /**
@@ -64,11 +64,13 @@ public class App {
 			App.logMessage("As retransform is not supported, once loaded classes cannot be modified.");
 		}
 
-		String[] args = agentArgs.split(",");
-		for (String argument : args) {
-			if (argument.startsWith(CLASSFILE_ARGUMENT)) {
-				String classfile = argument.substring(CLASSFILE_ARGUMENT.length());
-				loadClassesToMonitor(classfile);
+		if (agentArgs != null) {
+			String[] args = agentArgs.split(",");
+			for (String argument : args) {
+				if (argument.startsWith(CLASSFILE_ARGUMENT)) {
+					String classfile = argument.substring(CLASSFILE_ARGUMENT.length());
+					loadClassesToMonitor(classfile);
+				}
 			}
 		}
 		
@@ -109,16 +111,16 @@ public class App {
 	private static void loadClassesToMonitor(String classfile) throws IOException {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(classfile)))) {
 			String line = null;
-			Map<String, Set<String>> classesToMonitor = new HashMap<>();
+			Map<String, Map<String, MethodMonitorInfo>> classesToMonitor = new HashMap<>();
 			while ((line = reader.readLine()) != null) {
 				String[] split = line.split(",");
 				String classToMonitor = split[0];
-				Set<String> set = null;
+				Map<String, MethodMonitorInfo> set = null;
 				if (split.length > 1) {
-					set = new HashSet<>();
+					set = new HashMap<>();
 					for (int i=1;i<split.length;i++) {
 						if (!split[i].trim().isEmpty()) {
-							set.add(split[i]);
+							set.put(split[i], new ExecutionTimeMonitorInfo());
 						}
 					}
 				}

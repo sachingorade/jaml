@@ -1,7 +1,7 @@
 package com.ts.jaml.pojo;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author saching
@@ -10,7 +10,7 @@ import java.util.Set;
 public class ClassMonitorInfo {
 
 	private String classsName;
-	private Set<String> methods;
+	private Map<String, MethodMonitorInfo> methodsToMonitor;
 	
 	public ClassMonitorInfo(String className) {
 		classsName = className;
@@ -22,11 +22,11 @@ public class ClassMonitorInfo {
 	public void setClasssName(String classsName) {
 		this.classsName = classsName;
 	}
-	public Set<String> getMethods() {
-		return methods;
+	public Map<String, MethodMonitorInfo> getMethodsToMonitor() {
+		return methodsToMonitor;
 	}
-	public void setMethods(Set<String> methods) {
-		this.methods = methods;
+	public void setMethods(Map<String, MethodMonitorInfo> methods) {
+		this.methodsToMonitor = methods;
 	}
 
 	@Override
@@ -56,13 +56,13 @@ public class ClassMonitorInfo {
 
 	@Override
 	public String toString() {
-		return "ClassMonitorInfo [classsName=" + classsName + ", methods=" + methods + "]";
+		return "ClassMonitorInfo [classsName=" + classsName + ", methods=" + methodsToMonitor + "]";
 	}
 	
 	public ClassMonitorInfo copy() {
 		ClassMonitorInfo info = new ClassMonitorInfo(classsName);
-		if (methods != null) {
-			info.setMethods(new HashSet<>(methods));
+		if (methodsToMonitor != null) {
+			info.setMethods(new HashMap<String, MethodMonitorInfo>(methodsToMonitor));
 		}
 		return info;
 	}

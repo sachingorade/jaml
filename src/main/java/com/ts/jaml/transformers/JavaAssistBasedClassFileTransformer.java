@@ -9,6 +9,8 @@ import java.security.ProtectionDomain;
 import com.ts.jaml.App;
 import com.ts.jaml.jmx.JamlRegistry;
 import com.ts.jaml.pojo.ClassMonitorInfo;
+import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
+import com.ts.jaml.pojo.MethodMonitorInfo;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -21,6 +23,8 @@ import javassist.CtMethod;
 public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransformer {
 
 	private JamlRegistry jamlRegistry = JamlRegistry.getInstance();
+	
+	private static final MethodMonitorInfo DEFAULT_METHOD_MONITOR_INFO = new ExecutionTimeMonitorInfo();
 	
 	public JavaAssistBasedClassFileTransformer(Instrumentation instrumentation) {
 		super(instrumentation);
@@ -44,33 +48,8 @@ public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransforme
 			CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
 			CtMethod methods[] = ctClass.getDeclaredMethods();
 			for (CtMethod m : methods) {
-				if (classMonitorInfo.getMethods() == null || classMonitorInfo.getMethods().contains(m.getName())) {
-					App.logMessage("Updating method:" + m.getName() + "," + m.getSignature() + "," + m.getDeclaringClass().getName());
-					String startTimeVarName = "jaml_" + m.getName() + "_startTime";
-					String endTimeVarName = "jaml_" + m.getName() + "_endTime";
-					m.addLocalVariable(startTimeVarName, CtClass.longType);
-					m.addLocalVariable(endTimeVarName, CtClass.longType);
-					
-					/*
-					 * Record start time
-					 */
-					m.insertBefore(startTimeVarName + " = System.currentTimeMillis();");
-
-					StringBuilder afterCode = new StringBuilder();
-					/*
-					 * Record end time
-					 */
-					afterCode.append(endTimeVarName + " = System.currentTimeMillis();");
-					
-					String argVarName = "jaml_" + m.getName() + "_args";
-					afterCode.append("StringBuilder " + argVarName + " = new StringBuilder(\":Arguments:\");");
-					afterCode.append("for(int i=0;i<$args.length;i++) {if(i>0) {" + argVarName + ".append(\",\");}" + argVarName + ".append($args[i]);}");
-					
-					afterCode.append("System.out.println(\"[JAML] [Execution:" + ctClass.getName() + ":" + m.getName() + ":\" + "
-							+ startTimeVarName + " + \":\" + " + endTimeVarName + " + \":\" + (" + endTimeVarName + " - " + startTimeVarName + ") + " + argVarName  + " + \"]\");");
-					
-					m.insertAfter(afterCode.toString());
-				}
+				MethodMonitorInfo methodMonitorInfo = classMonitorInfo.getMethodsToMonitor()  == null ? DEFAULT_METHOD_MONITOR_INFO : classMonitorInfo.getMethodsToMonitor().get(m.getName());
+				transformMethod(m, methodMonitorInfo, ctClass);
 			}
 			byte[] bytecode = ctClass.toBytecode();
 			ctClass.detach();
@@ -81,6 +60,18 @@ public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransforme
 		}
 	}
 
+	/**
+	 * @param method method to transform
+	 * @param methodMonitorInfo method monitoring info
+	 * @param ctClass class to which method belongs
+	 * @throws Exception thrown in case of failure
+	 */
+	private void transformMethod(CtMethod method, MethodMonitorInfo methodMonitorInfo, CtClass ctClass) throws Exception {
+		if (methodMonitorInfo instanceof ExecutionTimeMonitorInfo) {
+			TransformationHelper.addExecutionTimeMonitorInfo(method, ctClass);
+		}
+	}
+	
 	@Override
 	public synchronized void addClassToMonitor(String className) throws ClassNotFoundException, UnmodifiableClassException {
 		jamlRegistry.removeClassesBeingMonitored(className);
