@@ -71,10 +71,11 @@ public class Utils {
 			return null;
 		}
 		ClassMonitorInfo info = null;
-		String[] parts = input.split("=");
-		String className = parts[0];
+		String[] inputParts = input.split("=");
+		String className = inputParts[0].trim();
 		info = new ClassMonitorInfo(className);
-		if (parts.length > 1) {
+		if (inputParts.length > 1) {
+			String[] parts = inputParts[1].split(",");
 			for (int i=0;i<parts.length;i++) {
 				String methodName = parts[i].trim();
 				if (!methodName.isEmpty()) {
