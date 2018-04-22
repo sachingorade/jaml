@@ -71,7 +71,7 @@ public class Utils {
 			return null;
 		}
 		ClassMonitorInfo info = null;
-		String[] parts = input.split(",");
+		String[] parts = input.split("=");
 		String className = parts[0];
 		info = new ClassMonitorInfo(className);
 		if (parts.length > 1) {
