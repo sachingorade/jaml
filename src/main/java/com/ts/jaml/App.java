@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -16,8 +14,7 @@ import com.google.common.eventbus.EventBus;
 import com.ts.jaml.events.JamlEvent;
 import com.ts.jaml.factory.TransformerFactory;
 import com.ts.jaml.jmx.JamlRegistry;
-import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
-import com.ts.jaml.pojo.MethodMonitorInfo;
+import com.ts.jaml.pojo.ClassMonitorInfo;
 import com.ts.jaml.transformers.JamlClassFileTransformer;
 
 /**
@@ -111,22 +108,12 @@ public class App {
 	private static void loadClassesToMonitor(String classfile) throws IOException {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(classfile)))) {
 			String line = null;
-			Map<String, Map<String, MethodMonitorInfo>> classesToMonitor = new HashMap<>();
 			while ((line = reader.readLine()) != null) {
-				String[] split = line.split(",");
-				String classToMonitor = split[0];
-				Map<String, MethodMonitorInfo> set = null;
-				if (split.length > 1) {
-					set = new HashMap<>();
-					for (int i=1;i<split.length;i++) {
-						if (!split[i].trim().isEmpty()) {
-							set.put(split[i], new ExecutionTimeMonitorInfo());
-						}
-					}
+				ClassMonitorInfo info = Utils.getClassMonitorInfoFromString(line);
+				if (info != null) {
+					jamlRegistry.addClassToMonitor(info);
 				}
-				classesToMonitor.put(classToMonitor, set);
 			}
-			jamlRegistry.addClassesToMonitor(classesToMonitor);
 		}
 	}
 
@@ -149,7 +136,7 @@ public class App {
 	}
 	
 	public static void logMessage(String log) {
-		System.out.println("[JAML] " + log);
+		System.out.println("[JAML-DEBUG] " + log);
 	}
 	
 }

@@ -10,7 +10,9 @@ import com.ts.jaml.App;
 import com.ts.jaml.jmx.JamlRegistry;
 import com.ts.jaml.pojo.ClassMonitorInfo;
 import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
+import com.ts.jaml.pojo.InvocationCounterMonitorInfo;
 import com.ts.jaml.pojo.MethodMonitorInfo;
+import com.ts.jaml.pojo.VariableValueMonitorInfo;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -23,8 +25,6 @@ import javassist.CtMethod;
 public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransformer {
 
 	private JamlRegistry jamlRegistry = JamlRegistry.getInstance();
-	
-	private static final MethodMonitorInfo DEFAULT_METHOD_MONITOR_INFO = new ExecutionTimeMonitorInfo();
 	
 	public JavaAssistBasedClassFileTransformer(Instrumentation instrumentation) {
 		super(instrumentation);
@@ -48,8 +48,10 @@ public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransforme
 			CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
 			CtMethod methods[] = ctClass.getDeclaredMethods();
 			for (CtMethod m : methods) {
-				MethodMonitorInfo methodMonitorInfo = classMonitorInfo.getMethodsToMonitor()  == null ? DEFAULT_METHOD_MONITOR_INFO : classMonitorInfo.getMethodsToMonitor().get(m.getName());
-				transformMethod(m, methodMonitorInfo, ctClass);
+				if (!m.isEmpty()) {
+					MethodMonitorInfo methodMonitorInfo = classMonitorInfo.getMethodsToMonitor()  == null ? new ExecutionTimeMonitorInfo(m.getName()) : classMonitorInfo.getMethodsToMonitor().get(m.getName());
+					transformMethod(m, methodMonitorInfo, ctClass);
+				}
 			}
 			byte[] bytecode = ctClass.toBytecode();
 			ctClass.detach();
@@ -68,7 +70,11 @@ public class JavaAssistBasedClassFileTransformer extends JamlClassFileTransforme
 	 */
 	private void transformMethod(CtMethod method, MethodMonitorInfo methodMonitorInfo, CtClass ctClass) throws Exception {
 		if (methodMonitorInfo instanceof ExecutionTimeMonitorInfo) {
-			TransformationHelper.addExecutionTimeMonitorInfo(method, ctClass);
+			TransformationHelper.addExecutionTimeMonitorInfo(method, ctClass, ((ExecutionTimeMonitorInfo) methodMonitorInfo).isPrintArguments());
+		} else if (methodMonitorInfo instanceof InvocationCounterMonitorInfo) {
+			TransformationHelper.addInvocationCounterMonitorInfo(method, ctClass);
+		} else if (methodMonitorInfo instanceof VariableValueMonitorInfo) {
+			TransformationHelper.addVariableValueMonitorInfo(method, ctClass, ((VariableValueMonitorInfo) methodMonitorInfo).getVariableMonitorInfos());
 		}
 	}
 	

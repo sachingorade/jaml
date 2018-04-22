@@ -91,7 +91,7 @@ public class JamlServer {
 				if(options.length > 1) {
 					methods = new HashMap<>();
 					for (int i=1;i<options.length;i++) {
-						methods.put(options[i], new ExecutionTimeMonitorInfo());
+						methods.put(options[i], new ExecutionTimeMonitorInfo(options[i]));
 					}
 				}
 				map.put(options[0], methods);

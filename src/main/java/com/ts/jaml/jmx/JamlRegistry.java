@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.ts.jaml.App;
+import com.ts.jaml.Utils;
 import com.ts.jaml.events.ClassMonitorAddedEvent;
 import com.ts.jaml.events.ClassMonitorRemovedEvent;
 import com.ts.jaml.events.ClassMonitorRetransformedEvent;
@@ -15,7 +16,6 @@ import com.ts.jaml.events.ClassMonitorUntransformedEvent;
 import com.ts.jaml.events.ClassMonitorUpdatedEvent;
 import com.ts.jaml.events.JamlEvent;
 import com.ts.jaml.pojo.ClassMonitorInfo;
-import com.ts.jaml.pojo.ExecutionTimeMonitorInfo;
 import com.ts.jaml.pojo.MethodMonitorInfo;
 
 /**
@@ -91,6 +91,20 @@ public class JamlRegistry implements JamlRegistryMBean {
 		}
 	}
 
+	public synchronized void addClassToMonitor(ClassMonitorInfo classMonitorInfo) {
+		ClassMonitorInfo monitorInfo = classesToMonitor.get(classMonitorInfo.getClasssName());
+		JamlEvent event = null;
+		if (monitorInfo != null) {
+			event = new ClassMonitorUpdatedEvent(classMonitorInfo);
+			classesToMonitor.put(classMonitorInfo.getClasssName(), classMonitorInfo);
+		} else {
+			event = new ClassMonitorAddedEvent(classMonitorInfo);
+			classesToMonitor.put(classMonitorInfo.getClasssName(), classMonitorInfo);
+		}
+		App.logMessage("Monitor changes for : " + classMonitorInfo);
+		App.publishEvent(event);
+	}
+	
 	public synchronized void addClassesToMonitor(Map<String, Map<String, MethodMonitorInfo>> classes) {
 		for (Entry<String, Map<String, MethodMonitorInfo>> entry : classes.entrySet()) {
 			ClassMonitorInfo info = classesToMonitor.get(entry.getKey());
@@ -185,11 +199,14 @@ public class JamlRegistry implements JamlRegistryMBean {
 
 	@Override
 	public synchronized void addClassMethodToMonitor(String className, String methodName) {
-		Map<String, Map<String, MethodMonitorInfo>> classesToMonitor = new HashMap<>();
-		Map<String, MethodMonitorInfo> methodsToMonitor = new HashMap<>();
-		methodsToMonitor.put(methodName, new ExecutionTimeMonitorInfo());
-		classesToMonitor.put(className, methodsToMonitor);
-		addClassesToMonitor(classesToMonitor);
+		ClassMonitorInfo info = new ClassMonitorInfo(className);
+		MethodMonitorInfo methodMonitorInfo = Utils.getMethodMonitorInfoFromString(methodName);
+		if (methodMonitorInfo != null) {
+			Map<String, MethodMonitorInfo> methodsToMonitor = new HashMap<>();
+			methodsToMonitor.put(methodName, methodMonitorInfo);
+			info.setMethods(methodsToMonitor);
+		}
+		addClassToMonitor(info);
 	}
 
 	@Override

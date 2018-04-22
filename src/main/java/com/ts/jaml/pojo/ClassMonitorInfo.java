@@ -1,5 +1,6 @@
 package com.ts.jaml.pojo;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,8 +8,10 @@ import java.util.Map;
  * @author saching
  *
  */
-public class ClassMonitorInfo {
+public class ClassMonitorInfo implements Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	private String classsName;
 	private Map<String, MethodMonitorInfo> methodsToMonitor;
 	

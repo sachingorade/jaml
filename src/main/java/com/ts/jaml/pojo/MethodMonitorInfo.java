@@ -8,10 +8,14 @@
  */
 package com.ts.jaml.pojo;
 
+import java.io.Serializable;
+
 /**
  * @author saching
  *
  */
-public interface MethodMonitorInfo {
+public interface MethodMonitorInfo extends Serializable {
+	
+	String getMethodName();
 
 }
