@@ -31,10 +31,11 @@ public class Utils {
 	public static final String VAR_INFO_END_SEPARATOR = ")";
 	public static final String MONITOR_TYPE_SEPARATOR = ":";
 	
-	public static final Pattern METHOD_INFO_PARAM_EXEC = Pattern.compile("exec" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*");
-	public static final Pattern METHOD_INFO_PARAM_VAR = Pattern.compile("var" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*\\" 
-			+ VAR_INFO_START_SEPARATOR +"([a-zA-Z]+[a-zA-Z0-9]*\\" + VAR_INFO_LINE_NUMBER_SEPARATOR + "[0-9]+\\|*)+\\" + VAR_INFO_END_SEPARATOR);
-	public static final Pattern METHOD_INFO_PARAM_INVOC = Pattern.compile("invoc" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*");
+	public static final Pattern METHOD_INFO_PARAM_NONE = Pattern.compile("([a-zA-Z]+[a-zA-Z0-9]*){1}");
+	public static final Pattern METHOD_INFO_PARAM_EXEC = Pattern.compile("(exec" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*){1}");
+	public static final Pattern METHOD_INFO_PARAM_VAR = Pattern.compile("(var" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*\\" 
+			+ VAR_INFO_START_SEPARATOR +"([a-zA-Z]+[a-zA-Z0-9]*\\" + VAR_INFO_LINE_NUMBER_SEPARATOR + "[0-9]+\\|*)+\\" + VAR_INFO_END_SEPARATOR +"){1}");
+	public static final Pattern METHOD_INFO_PARAM_INVOC = Pattern.compile("(invoc" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*){1}");
 	
 	public static MethodMonitorInfo getMethodMonitorInfoFromString(String methodName) {
 		if (methodName != null && !methodName.isEmpty()) {
@@ -60,14 +61,16 @@ public class Utils {
 				App.logMessage("Invoc method match:" + methodName);
 				methodName = methodName.substring(methodName.indexOf(MONITOR_TYPE_SEPARATOR) + 1, methodName.length());
 				return new InvocationCounterMonitorInfo(methodName);
+			} else if (METHOD_INFO_PARAM_NONE.matcher(methodName).matches()) {
+				App.logMessage("No method match:" + methodName);
+				return new ExecutionTimeMonitorInfo(methodName);
 			}
-			App.logMessage("No method match:" + methodName);
 		}
 		return null;
 	}
 	
 	public static ClassMonitorInfo getClassMonitorInfoFromString(String input) {
-		if (input == null || input.isEmpty()) {
+		if (input == null || input.trim().isEmpty()) {
 			return null;
 		}
 		ClassMonitorInfo info = null;
