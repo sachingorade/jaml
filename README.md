@@ -73,8 +73,8 @@ This method allows a JMX client like jConsole to configure the classes to be mon
 Once you have configured JAML in your application JAML library will start printing the monitoring logs on standard output stream with [JAML] prefix like an example below,
 
 ```
-[JAML] Monitoring class : com.app.package.ClassName
-[JAML] Transforming class:com.app.package.ClassName
+[JAML-DEBUG] Monitoring class : com.app.package.ClassName
+[JAML-DEBUG] Transforming class:com.app.package.ClassName
 [JAML] [Execution:com.app.package.ClassName:methodToMonitor:1523368988577:1523368988578:1:Arguments:arg1,arg2]
 [JAML] [Variable:com.app.package.ClassName:methodToMonitor:myVariable:1775939031]
 [JAML] [Invocation:com.app.package.ClassName:methodToMonitor:2]
