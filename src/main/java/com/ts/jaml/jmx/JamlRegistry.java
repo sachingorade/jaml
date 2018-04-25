@@ -101,7 +101,7 @@ public class JamlRegistry implements JamlRegistryMBean {
 			event = new ClassMonitorAddedEvent(classMonitorInfo);
 			classesToMonitor.put(classMonitorInfo.getClasssName(), classMonitorInfo);
 		}
-		App.logMessage("Monitor changes for : " + classMonitorInfo);
+		App.logMessage("Monitor changed for : " + classMonitorInfo);
 		App.publishEvent(event);
 	}
 	

@@ -39,6 +39,27 @@ public class TestUtils {
 	}
 
 	@Test
+	public final void testGetMethodMonitorInfoFromStringForExecPrefixPrintVars() {
+		MethodMonitorInfo info = Utils.getMethodMonitorInfoFromString("exec:myMethod(printVars)");
+		Assert.assertNotNull(info);
+		Assert.assertTrue(info instanceof ExecutionTimeMonitorInfo);
+	}
+
+	@Test
+	public final void testGetMethodMonitorInfoFromStringForExecPrefixWith_$() {
+		MethodMonitorInfo info = Utils.getMethodMonitorInfoFromString("exec:_myMethod$");
+		Assert.assertNotNull(info);
+		Assert.assertTrue(info instanceof ExecutionTimeMonitorInfo);
+	}
+
+	@Test
+	public final void testGetMethodMonitorInfoFromStringForExecPrefixWith$_() {
+		MethodMonitorInfo info = Utils.getMethodMonitorInfoFromString("exec:$my_Method");
+		Assert.assertNotNull(info);
+		Assert.assertTrue(info instanceof ExecutionTimeMonitorInfo);
+	}
+
+	@Test
 	public final void testGetMethodMonitorInfoFromStringForInvalidExecPrefix() {
 		MethodMonitorInfo info = Utils.getMethodMonitorInfoFromString("exec::myMethod");
 		Assert.assertNull(info);

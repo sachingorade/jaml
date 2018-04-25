@@ -31,18 +31,24 @@ public class Utils {
 	public static final String VAR_INFO_END_SEPARATOR = ")";
 	public static final String MONITOR_TYPE_SEPARATOR = ":";
 	
-	public static final Pattern METHOD_INFO_PARAM_NONE = Pattern.compile("([a-zA-Z]+[a-zA-Z0-9]*){1}");
-	public static final Pattern METHOD_INFO_PARAM_EXEC = Pattern.compile("(exec" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*){1}");
-	public static final Pattern METHOD_INFO_PARAM_VAR = Pattern.compile("(var" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*\\" 
-			+ VAR_INFO_START_SEPARATOR +"([a-zA-Z]+[a-zA-Z0-9]*\\" + VAR_INFO_LINE_NUMBER_SEPARATOR + "[0-9]+\\|*)+\\" + VAR_INFO_END_SEPARATOR +"){1}");
-	public static final Pattern METHOD_INFO_PARAM_INVOC = Pattern.compile("(invoc" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z]+[0-9a-zA-Z]*){1}");
+	public static final Pattern METHOD_INFO_PARAM_NONE = Pattern.compile("([a-zA-Z_$]+[a-zA-Z0-9_$]*){1}");
+	public static final Pattern METHOD_INFO_PARAM_EXEC = Pattern.compile("(exec" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z_$]+[0-9a-zA-Z_$]*(\\(printVars\\)){0,1}){1}");
+	public static final Pattern METHOD_INFO_PARAM_VAR = Pattern.compile("(var" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z_$]+[0-9a-zA-Z_$]*\\" 
+			+ VAR_INFO_START_SEPARATOR +"([a-zA-Z_$]+[a-zA-Z0-9_$]*\\" + VAR_INFO_LINE_NUMBER_SEPARATOR + "[0-9]+\\|*)+\\" + VAR_INFO_END_SEPARATOR +"){1}");
+	public static final Pattern METHOD_INFO_PARAM_INVOC = Pattern.compile("(invoc" + MONITOR_TYPE_SEPARATOR + "[a-zA-Z_$]+[0-9a-zA-Z_$]*){1}");
 	
 	public static MethodMonitorInfo getMethodMonitorInfoFromString(String methodName) {
 		if (methodName != null && !methodName.isEmpty()) {
 			if (METHOD_INFO_PARAM_EXEC.matcher(methodName).matches()) {
 				App.logMessage("Exec method match:" + methodName);
-				methodName = methodName.substring(methodName.indexOf(MONITOR_TYPE_SEPARATOR) + 1, methodName.length());
-				return new ExecutionTimeMonitorInfo(methodName);
+				boolean printVars = false;
+				if (methodName.indexOf("(") > 0) {
+					methodName = methodName.substring(methodName.indexOf(MONITOR_TYPE_SEPARATOR) + 1, methodName.indexOf("("));
+					printVars = true;
+				} else {
+					methodName = methodName.substring(methodName.indexOf(MONITOR_TYPE_SEPARATOR) + 1, methodName.length());
+				}
+				return new ExecutionTimeMonitorInfo(methodName, printVars);
 			} else if (METHOD_INFO_PARAM_VAR.matcher(methodName).matches()) {
 				App.logMessage("Var method match:" + methodName);
 				String variables = methodName.substring(methodName.indexOf(VAR_INFO_START_SEPARATOR) + 1, methodName.indexOf(VAR_INFO_END_SEPARATOR));
