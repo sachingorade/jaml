@@ -1,1 +1,8 @@
 language: java
+deploy:
+  provider: releases
+  api_key: "4de5512eb74ed9d689d20b4b1fc74f8e541c75f2"
+  file: "jaml-*"
+  skip_cleanup: true
+  on:
+    tags: true
