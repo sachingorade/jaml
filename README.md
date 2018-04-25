@@ -45,6 +45,11 @@ com.app.package.ClassName=exec:method2ToMonitor
 ```
 Note that default monitor info is execution time monitor info, so if you don't specify "exec:" prefix then also execution time monitor info will be used.
 
+If you have 2 methods with the same name or you want to check what are the parameter values those are passed to this method, you can print the method parameters using following syntax,
+```
+com.app.package.ClassName=exec:method2ToMonitor(printVars)
+```
+
 ##### Invocation counter monitor info
 To monitor method invocation count, use following syntax -
 ```
