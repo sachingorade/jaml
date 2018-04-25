@@ -1,7 +1,7 @@
 # JAML [![Build Status](https://travis-ci.org/sachingorade/jaml.svg?branch=master)](https://travis-ci.org/sachingorade/jaml)
 Java Application Monitoring Library (JAML). JAML was designed to be developer and tester friendly library. Current tools and libraries requires either end users to buy the license or write custom code blocks to monitor the application.
 
-Focus of the JAML is to **minimum changes and maximum output**.
+Focus of the JAML is to **minimum configuration and maximum output**.
 
 ## Features
 This library allows users to monitor three types of monitors in the application,
