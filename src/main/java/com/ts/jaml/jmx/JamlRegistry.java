@@ -71,7 +71,7 @@ public class JamlRegistry implements JamlRegistryMBean {
 		return classesBeingMonitored.containsKey(className);
 	}
 	
-	public synchronized boolean isMonitored(String className, String methodName) {
+	public synchronized boolean isClassMethodBeingMonitored(String className, String methodName) {
 		ClassMonitorInfo info = classesBeingMonitored.get(className);
 		return (info != null) && (info.getMethodsToMonitor() == null || info.getMethodsToMonitor().containsKey(methodName));
 	}
@@ -92,11 +92,19 @@ public class JamlRegistry implements JamlRegistryMBean {
 	}
 
 	public synchronized void addClassToMonitor(ClassMonitorInfo classMonitorInfo) {
+		if (classMonitorInfo == null) {
+			return;
+		}
 		ClassMonitorInfo monitorInfo = classesToMonitor.get(classMonitorInfo.getClasssName());
 		JamlEvent event = null;
 		if (monitorInfo != null) {
-			event = new ClassMonitorUpdatedEvent(classMonitorInfo);
-			classesToMonitor.put(classMonitorInfo.getClasssName(), classMonitorInfo);
+			if (monitorInfo.getMethodsToMonitor() != null) {
+				monitorInfo.getMethodsToMonitor().putAll(classMonitorInfo.getMethodsToMonitor());
+			} else {
+				monitorInfo.setMethods(classMonitorInfo.getMethodsToMonitor());
+			}
+			event = new ClassMonitorUpdatedEvent(monitorInfo);
+			classesToMonitor.put(classMonitorInfo.getClasssName(), monitorInfo);
 		} else {
 			event = new ClassMonitorAddedEvent(classMonitorInfo);
 			classesToMonitor.put(classMonitorInfo.getClasssName(), classMonitorInfo);
@@ -129,6 +137,9 @@ public class JamlRegistry implements JamlRegistryMBean {
 	
 	public synchronized void addClassBeingMonitored(String... classNames) {
 		for (String className : classNames) {
+			if (!classesToMonitor.containsKey(className)) {
+				throw new IllegalArgumentException("Class:[" + className + "] is not present in monitor registry.");
+			}
 			ClassMonitorInfo classMonitorInfo = new ClassMonitorInfo(className);
 			classesBeingMonitored.put(className, classMonitorInfo);
 			App.publishEvent(new ClassMonitorTransformedEvent(classMonitorInfo));
@@ -137,6 +148,9 @@ public class JamlRegistry implements JamlRegistryMBean {
 	
 	public synchronized void addClassBeingMonitored(Map<String, Map<String, MethodMonitorInfo>> classes) {
 		for (Entry<String, Map<String, MethodMonitorInfo>> entry : classes.entrySet()) {
+			if (!classesToMonitor.containsKey(entry.getKey())) {
+				throw new IllegalArgumentException("Class:[" + entry.getKey() + "] is not present in monitor registry.");
+			}
 			ClassMonitorInfo info = classesBeingMonitored.get(entry.getKey());
 			JamlEvent event;
 			if (info == null) {
@@ -184,11 +198,11 @@ public class JamlRegistry implements JamlRegistryMBean {
 	}
 
 	@Override
-	public Set<String> getClassesToMonitor() {
+	public Set<String> getClassesToBeMonitored() {
 		return new HashSet<>(classesToMonitor.keySet());
 	}
 
-	public Set<String> getClassesBeingMonitored() {
+	public Set<String> getClassesCurrentlyBeingMonitored() {
 		return new HashSet<>(classesBeingMonitored.keySet());
 	}
 
@@ -203,7 +217,7 @@ public class JamlRegistry implements JamlRegistryMBean {
 		MethodMonitorInfo methodMonitorInfo = Utils.getMethodMonitorInfoFromString(methodName);
 		if (methodMonitorInfo != null) {
 			Map<String, MethodMonitorInfo> methodsToMonitor = new HashMap<>();
-			methodsToMonitor.put(methodName, methodMonitorInfo);
+			methodsToMonitor.put(methodMonitorInfo.getMethodName(), methodMonitorInfo);
 			info.setMethods(methodsToMonitor);
 		}
 		addClassToMonitor(info);
@@ -219,12 +233,21 @@ public class JamlRegistry implements JamlRegistryMBean {
 		classesBeingMonitored.remove(className);
 		MethodMonitorInfo methodMonitorInfo = classMonitorInfo.getMethodsToMonitor() == null ? null : classMonitorInfo.getMethodsToMonitor().remove(methodName);
 		if (classMonitorInfo.getMethodsToMonitor() == null || (classMonitorInfo.getMethodsToMonitor().isEmpty() && methodMonitorInfo != null)) {
+			classesToMonitor.remove(className);
 			JamlEvent event = new ClassMonitorRemovedEvent(classMonitorInfo);
 			App.publishEvent(event);
 			return;
 		}
 		JamlEvent event = new ClassMonitorUpdatedEvent(classMonitorInfo);
 		App.publishEvent(event);
+	}
+
+	Map<String, ClassMonitorInfo> getClassesToMonitor() {
+		return classesToMonitor;
+	}
+
+	Map<String, ClassMonitorInfo> getClassesBeingMonitored() {
+		return classesBeingMonitored;
 	}
 
 }

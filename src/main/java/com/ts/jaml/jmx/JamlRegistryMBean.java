@@ -41,6 +41,6 @@ public interface JamlRegistryMBean {
 	/**
 	 * @return returns the classes which are to be monitored
 	 */
-	Set<String> getClassesToMonitor();
+	Set<String> getClassesToBeMonitored();
 
 }
