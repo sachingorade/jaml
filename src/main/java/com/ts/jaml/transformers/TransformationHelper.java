@@ -49,7 +49,7 @@ public class TransformationHelper {
 			afterCode.append("for(int i=0;i<$args.length;i++) {if(i>0) {" + argVarName + ".append(\",\");}" + argVarName + ".append($args[i]);}");
 		}
 		
-		afterCode.append("System.out.println(\"[JAML] [Execution:" + ctClass.getName() + ":" + m.getName() + ":\" + "
+		afterCode.append("System.out.println(\"[JAML] [\" + Thread.currentThread().getName() + \"] [Execution:" + ctClass.getName() + ":" + m.getName() + ":\" + "
 				+ startTimeVarName + " + \":\" + " + endTimeVarName + " + \":\" + (" + endTimeVarName + " - " + startTimeVarName + ") + " + argVarName  + " + \"]\");");
 		
 		m.insertAfter(afterCode.toString());
@@ -72,7 +72,7 @@ public class TransformationHelper {
 		 * Record and print method execution invocation counter
 		 */
 		m.insertBefore(counterVariableName + " = " + counterVariableName + " + 1;");
-		m.insertAfter("System.out.println(\"[JAML] [Invocation:" + ctClass.getName() + ":" + m.getName() + ":\" + " + counterVariableName + " + \"]\");");
+		m.insertAfter("System.out.println(\"[JAML] [\" + Thread.currentThread().getName() + \"] [Invocation:" + ctClass.getName() + ":" + m.getName() + ":\" + " + counterVariableName + " + \"]\");");
 	}
 
 	/**
@@ -88,7 +88,7 @@ public class TransformationHelper {
 			String variableName = info.getVariable();
 			int lineNumber = info.getLineNumber();
 			App.logMessage("Updating class:" + ctClass.getName() + ", adding variable monitor for:" + m.getName() + ":" + variableName + "," + m.getSignature() + "," + m.getDeclaringClass().getName());
-			m.insertAt(lineNumber + variableLineDelta, "System.out.println(\"[JAML] [Variable:" + ctClass.getName() + ":" + m.getName() + ":" + variableName + ":\" + " + variableName + " + \"]\");");
+			m.insertAt(lineNumber + variableLineDelta, "System.out.println(\"[JAML] [\" + Thread.currentThread().getName() + \"] [Variable:" + ctClass.getName() + ":" + m.getName() + ":" + variableName + ":\" + " + variableName + " + \"]\");");
 			variableLineDelta++;
 		}
 	}
