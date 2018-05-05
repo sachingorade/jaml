@@ -80,9 +80,9 @@ Once you have configured JAML in your application JAML library will start printi
 ```
 [JAML-DEBUG] Monitoring class : com.app.package.ClassName
 [JAML-DEBUG] Transforming class:com.app.package.ClassName
-[JAML] [Execution:com.app.package.ClassName:methodToMonitor:1523368988577:1523368988578:1:Arguments:arg1,arg2]
-[JAML] [Variable:com.app.package.ClassName:methodToMonitor:myVariable:1775939031]
-[JAML] [Invocation:com.app.package.ClassName:methodToMonitor:2]
+[JAML] [main] [Execution:com.app.package.ClassName:methodToMonitor:1523368988577:1523368988578:1:Arguments:arg1,arg2]
+[JAML] [main] [Variable:com.app.package.ClassName:methodToMonitor:myVariable:1775939031]
+[JAML] [main] [Invocation:com.app.package.ClassName:methodToMonitor:2]
 ```
 Monitoring log is printed in above format where,
 [Execution:**CLASS_NAME**:**METHOD_NAME**:**START_TIME**:**END_TIME**:**TIME_EXECUTED**:Arguments:**COMMA_SEPARATE_ARGUMENT_LIST**]
