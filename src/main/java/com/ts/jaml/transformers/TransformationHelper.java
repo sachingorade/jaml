@@ -87,9 +87,14 @@ public class TransformationHelper {
 		for (VariableMonitorInfo info : variableMonitorInfos) {
 			String variableName = info.getVariable();
 			int lineNumber = info.getLineNumber();
-			App.logMessage("Updating class:" + ctClass.getName() + ", adding variable monitor for:" + m.getName() + ":" + variableName + "," + m.getSignature() + "," + m.getDeclaringClass().getName());
-			m.insertAt(lineNumber + variableLineDelta, "System.out.println(\"[JAML] [\" + Thread.currentThread().getName() + \"] [Variable:" + ctClass.getName() + ":" + m.getName() + ":" + variableName + ":\" + " + variableName + " + \"]\");");
-			variableLineDelta++;
+			int codeLength = m.getMethodInfo().getCodeAttribute().iterator().getCodeLength();
+			int methodStartLine = m.getMethodInfo().getLineNumber(0);
+			int methodEndLine = m.getMethodInfo().getLineNumber(codeLength);
+			if (lineNumber >= methodStartLine && lineNumber <= methodEndLine) {
+				App.logMessage("Updating class:" + ctClass.getName() + ", adding variable monitor for:" + m.getName() + ":" + variableName + "," + m.getSignature() + "," + m.getDeclaringClass().getName());
+				m.insertAt(lineNumber + variableLineDelta, "System.out.println(\"[JAML] [\" + Thread.currentThread().getName() + \"] [Variable:" + ctClass.getName() + ":" + m.getName() + ":" + variableName + ":\" + " + variableName + " + \"]\");");
+				variableLineDelta++;
+			}
 		}
 	}
 	
